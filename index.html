@@ -163,6 +163,7 @@
     <button id="today" type="button">今天</button>
     <button id="nextDay" type="button">後一天</button>
     <input type="date" id="datePick" aria-label="選擇日期">
+    <button id="exportCsv" type="button">匯出 CSV</button>
   </div>
 </header>
 <main>
@@ -406,6 +407,23 @@ function cancelBooking(id) {
   render();
   return true;
 }
+// 匯出目前日期的預約為 CSV（會議室、時段、預約人）
+function csvCell(v) {
+  let s = String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // 避免試算表將內容當公式執行
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+$('exportCsv').addEventListener('click', () => {
+  const sorted = [...bookingStore.list(curDate)].sort((a, b) => a.start - b.start || a.room.localeCompare(b.room));
+  const rows = [['會議室', '時段', '預約人'], ...sorted.map(b =>
+    [roomName(b.room), slotLabel(b.start) + '–' + slotLabel(b.end), b.name])];
+  const csv = '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n'); // BOM 讓 Excel 正確顯示中文
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `預約清單-${curDate}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 $('list').addEventListener('click', e => {
   const cb = e.target.closest('[data-cancel]');
   if (cb) { cancelBooking(cb.dataset.cancel); return; }
