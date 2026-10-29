@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>findConflict 測試</title>
+<style>
+  body { font-family: system-ui, "Microsoft JhengHei", sans-serif; max-width: 860px; margin: 24px auto; padding: 0 16px; color: #222; }
+  #summary { font-size: 1.3rem; font-weight: bold; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+  #summary.pass { background: #e6f6ea; color: #17692f; }
+  #summary.fail { background: #fde8e8; color: #a11919; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; }
+  th { background: #f3f3f3; }
+  td.mark { text-align: center; width: 3em; }
+  tr.group td { background: #fafafa; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>findConflict 衝突檢查測試</h1>
+<div id="summary">執行中…</div>
+<table>
+  <thead><tr><th>測試名稱</th><th>預期值</th><th>實際值</th><th>結果</th></tr></thead>
+  <tbody id="results"></tbody>
+</table>
+
+<script src="app.js"></script>
+<script>
+// 測試用假資料層：取代 index.html 的 bookingStore，不碰 localStorage
+let fixtures = [];
+const bookingStore = { list: date => fixtures.filter(b => b.date === date) };
+
+const DATE = '2026-01-01';
+// 小時 → 格索引（以 09:00 為 0，每格 30 分鐘；僅為測試書寫方便）
+const h = hour => (hour - 9) * 2;
+// 既有預約固定為 r1、10:00–12:00
+const existing = { id: 'x1', date: DATE, room: 'r1', start: h(10), end: h(12) };
+const req = (room, from, to) => ({ date: DATE, room, start: h(from), end: h(to) });
+
+// 每項：名稱、新預約、ignoreId、預期是否衝突
+const cases = [
+  ['【一般】', null],
+  ['完全相同時段（10–12）', req('r1', 10, 12), undefined, true],
+  ['完全錯開（14–16）', req('r1', 14, 16), undefined, false],
+  ['【邊界】', null],
+  ['部分重疊：前段（9–11）', req('r1', 9, 11), undefined, true],
+  ['部分重疊：後段（11–13）', req('r1', 11, 13), undefined, true],
+  ['完全包含：新預約包住既有（9–13）', req('r1', 9, 13), undefined, true],
+  ['完全包含：新預約在既有內（10:30–11:30）', { date: DATE, room: 'r1', start: h(10) + 1, end: h(11) + 1 }, undefined, true],
+  ['緊鄰：新預約接在後（12–14）', req('r1', 12, 14), undefined, false],
+  ['緊鄰：新預約接在前（9–10）', req('r1', 9, 10), undefined, false],
+  ['不同會議室同時段（r2，10–12）', req('r2', 10, 12), undefined, false],
+  ['不同日期同時段', { date: '2026-01-02', room: 'r1', start: h(10), end: h(12) }, undefined, false],
+  ['編輯自身（ignoreId = 自己，10–12）', req('r1', 10, 12), 'x1', false],
+];
+
+const tbody = document.getElementById('results');
+let pass = 0, total = 0;
+
+for (const c of cases) {
+  const tr = document.createElement('tr');
+  if (c[1] === null) {
+    tr.className = 'group';
+    tr.innerHTML = '<td colspan="4"></td>';
+    tr.firstChild.textContent = c[0];
+    tbody.appendChild(tr);
+    continue;
+  }
+  const [name, booking, ignoreId, expected] = c;
+  fixtures = [existing];
+  const actual = findConflict(booking, ignoreId) !== null;
+  const ok = actual === expected;
+  total++; if (ok) pass++;
+  const label = v => v ? '衝突' : '不衝突';
+  [name, label(expected), label(actual), ok ? '✅' : '❌'].forEach((text, i) => {
+    const td = document.createElement('td');
+    if (i === 3) td.className = 'mark';
+    td.textContent = text;
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr);
+}
+
+const summary = document.getElementById('summary');
+summary.textContent = `通過 ${pass} 項／共 ${total} 項`;
+summary.className = pass === total ? 'pass' : 'fail';
+</script>
+</body>
+</html>
