@@ -113,7 +113,7 @@
   .list-head { margin: 28px 0 10px; font-size: 18px; font-weight: 700; }
   .list-head small { font-size: 13px; font-weight: 500; color: var(--ink-soft); margin-left: 8px; }
   .list { list-style: none; margin: 0; padding: 0; background: var(--board); border: 1px solid var(--rule-strong); border-radius: 6px; overflow: hidden; }
-  .list li { display: grid; grid-template-columns: 112px 96px 1fr; gap: 4px 12px; align-items: baseline; padding: 10px 14px; border-bottom: 1px solid var(--rule); border-left: 5px solid var(--rc); cursor: pointer; }
+  .list li { display: grid; grid-template-columns: 112px 96px 1fr auto; gap: 4px 12px; align-items: baseline; padding: 10px 14px; border-bottom: 1px solid var(--rule); border-left: 5px solid var(--rc); cursor: pointer; }
   .list li:last-child { border-bottom: 0; }
   .list li:hover { background: color-mix(in srgb, var(--rc) 9%, white); }
   .list li.done { opacity: .62; }
@@ -122,7 +122,8 @@
   .list .tx b { font-weight: 700; margin-right: 8px; }
   .list .empty { display: block; cursor: default; color: var(--ink-soft); border-left-color: var(--rule-strong); }
   .list .empty:hover { background: none; }
-  @media (max-width: 600px) { .list li { grid-template-columns: 1fr; gap: 0; } }
+  .list .cancel-btn { padding: 2px 12px; font-size: 13px; align-self: center; }
+  @media (max-width: 600px) { .list li { grid-template-columns: 1fr; gap: 0; } .list .cancel-btn { justify-self: end; margin-top: 6px; } }
 
   /* 對話框 */
   dialog {
@@ -328,9 +329,12 @@ function renderList(bookings) {
   const sorted = [...bookings].sort((a, b) => a.start - b.start || a.room.localeCompare(b.room));
   $('list').innerHTML = sorted.map(b => {
     const done = isPast(curDate, b.end - 1) ? ' done' : '';
+    // 已開始的預約不可取消，不顯示按鈕
+    const cancelBtn = isPast(b.date, b.start) ? '' :
+      `<button type="button" class="danger cancel-btn" data-cancel="${b.id}">取消</button>`;
     return `<li class="${roomClass(b.room)}${done}" data-id="${b.id}" tabindex="0">` +
       `<span class="t">${slotLabel(b.start)}–${slotLabel(b.end)}</span><span class="rm">${roomName(b.room)}</span>` +
-      `<span class="tx"><b>${esc(b.name)}</b>${esc(b.topic)}</span></li>`;
+      `<span class="tx"><b>${esc(b.name)}</b>${esc(b.topic)}</span>${cancelBtn}</li>`;
   }).join('');
 }
 
@@ -395,11 +399,21 @@ $('grid').addEventListener('click', e => activate(e.target.closest('td')));
 $('grid').addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(e.target.closest('td')); }
 });
+// 確認後取消預約；列表與對話框共用
+function cancelBooking(id) {
+  if (!confirm('確定要取消這筆預約嗎？取消後該時段會恢復為空檔。')) return false;
+  bookingStore.remove(id);
+  render();
+  return true;
+}
 $('list').addEventListener('click', e => {
+  const cb = e.target.closest('[data-cancel]');
+  if (cb) { cancelBooking(cb.dataset.cancel); return; }
   const li = e.target.closest('li[data-id]');
   if (li) openDialog(bookingStore.get(li.dataset.id));
 });
 $('list').addEventListener('keydown', e => {
+  if (e.target.closest('[data-cancel]')) return; // 按鈕自身的 Enter／Space 只觸發取消
   const li = e.target.closest('li[data-id]');
   if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDialog(bookingStore.get(li.dataset.id)); }
 });
@@ -408,9 +422,7 @@ $('fStart').addEventListener('change', () => {
 });
 $('btnClose').addEventListener('click', () => $('dlg').close());
 $('btnDel').addEventListener('click', () => {
-  if (!confirm('確定要取消這筆預約嗎？取消後該時段會恢復為空檔。')) return;
-  bookingStore.remove(editingId);
-  $('dlg').close(); render();
+  if (cancelBooking(editingId)) $('dlg').close();
 });
 $('form').addEventListener('submit', e => {
   e.preventDefault();
