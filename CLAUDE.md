@@ -33,6 +33,7 @@ python -m http.server 8765 --directory .
 - 本專案為 `index.html` + `app.js` + `test.html` 三檔，禁止再拆分其他檔案、禁止引入外部框架；`app.js` 以一般 `<script src>` 載入，不使用 ES module（頁面直接雙擊開啟）。
 - 所有介面文字與程式註解使用繁體中文。
 - 每次修改後，用一句話說明改了什麼。
+- commit 訊息一律採用 Conventional Commits 格式，以 `feat:`／`fix:`／`docs:`／`refactor:` 開頭，冒號後以繁體中文描述這次改了什麼（例如 `feat: 新增深色模式切換`）。
 
 ## 明確不做（勿擅自加入）
 
