@@ -32,7 +32,9 @@
   /* 頁首：日期即標題 */
   header { max-width: 980px; margin: 0 auto; padding: 28px 20px 16px; }
   .date-title { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: .02em; line-height: 1.2; }
-  .date-title small { font-size: 16px; font-weight: 500; color: var(--ink-soft); margin-left: 10px; letter-spacing: 0; }
+  .date-title small { font-size: 16px; font-weight: 500; color: var(--ink-soft); letter-spacing: 0; }
+  .date-title .yr { margin-right: 8px; }
+  .date-title .wd { margin-left: 10px; }
   .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
   button {
     padding: 7px 14px; border: 1px solid var(--rule-strong); border-radius: 4px;
@@ -107,6 +109,21 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* 預約列表 */
+  .list-head { margin: 28px 0 10px; font-size: 18px; font-weight: 700; }
+  .list-head small { font-size: 13px; font-weight: 500; color: var(--ink-soft); margin-left: 8px; }
+  .list { list-style: none; margin: 0; padding: 0; background: var(--board); border: 1px solid var(--rule-strong); border-radius: 6px; overflow: hidden; }
+  .list li { display: grid; grid-template-columns: 112px 96px 1fr; gap: 4px 12px; align-items: baseline; padding: 10px 14px; border-bottom: 1px solid var(--rule); border-left: 5px solid var(--rc); cursor: pointer; }
+  .list li:last-child { border-bottom: 0; }
+  .list li:hover { background: color-mix(in srgb, var(--rc) 9%, white); }
+  .list li.done { opacity: .62; }
+  .list .t { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .list .rm { color: var(--rc); font-weight: 600; }
+  .list .tx b { font-weight: 700; margin-right: 8px; }
+  .list .empty { display: block; cursor: default; color: var(--ink-soft); border-left-color: var(--rule-strong); }
+  .list .empty:hover { background: none; }
+  @media (max-width: 600px) { .list li { grid-template-columns: 1fr; gap: 0; } }
+
   /* 對話框 */
   dialog {
     border: 0; border-radius: 6px; padding: 0; width: min(440px, calc(100vw - 24px));
@@ -149,6 +166,8 @@
 </header>
 <main>
   <div class="board"><div class="board-inner" id="inner"><table id="grid"></table></div></div>
+  <h2 class="list-head" id="listHead"></h2>
+  <ul class="list" id="list"></ul>
 </main>
 
 <dialog id="dlg">
@@ -266,7 +285,7 @@ function esc(s) {
 
 function render() {
   const d = parseDate(curDate);
-  $('dateTitle').innerHTML = `${d.getMonth() + 1}月${d.getDate()}日<small>${d.getFullYear()} 週${WEEKDAYS[d.getDay()]}</small>`;
+  $('dateTitle').innerHTML = `<small class="yr">${d.getFullYear()}年</small>${d.getMonth() + 1}月${d.getDate()}日<small class="wd">週${WEEKDAYS[d.getDay()]}</small>`;
   $('datePick').value = curDate;
 
   const bookings = bookingStore.list(curDate);
@@ -296,6 +315,23 @@ function render() {
   }
   $('grid').innerHTML = html + '</tbody>';
   renderNowLine();
+  renderList(bookings);
+}
+
+// 當日預約列表：依開始時間排序，點選可檢視／編輯
+function renderList(bookings) {
+  $('listHead').innerHTML = `當日預約<small>${bookings.length} 筆</small>`;
+  if (!bookings.length) {
+    $('list').innerHTML = '<li class="empty">這天還沒有預約。點上方格狀圖的空格即可新增。</li>';
+    return;
+  }
+  const sorted = [...bookings].sort((a, b) => a.start - b.start || a.room.localeCompare(b.room));
+  $('list').innerHTML = sorted.map(b => {
+    const done = isPast(curDate, b.end - 1) ? ' done' : '';
+    return `<li class="${roomClass(b.room)}${done}" data-id="${b.id}" tabindex="0">` +
+      `<span class="t">${slotLabel(b.start)}–${slotLabel(b.end)}</span><span class="rm">${roomName(b.room)}</span>` +
+      `<span class="tx"><b>${esc(b.name)}</b>${esc(b.topic)}</span></li>`;
+  }).join('');
 }
 
 // 現在時間線：僅在今天且位於營業時段內顯示
@@ -358,6 +394,14 @@ function activate(td) {
 $('grid').addEventListener('click', e => activate(e.target.closest('td')));
 $('grid').addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(e.target.closest('td')); }
+});
+$('list').addEventListener('click', e => {
+  const li = e.target.closest('li[data-id]');
+  if (li) openDialog(bookingStore.get(li.dataset.id));
+});
+$('list').addEventListener('keydown', e => {
+  const li = e.target.closest('li[data-id]');
+  if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDialog(bookingStore.get(li.dataset.id)); }
 });
 $('fStart').addEventListener('change', () => {
   fillEnd(Number($('fStart').value), Number($('fEnd').value));

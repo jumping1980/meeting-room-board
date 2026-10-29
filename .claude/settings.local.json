@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(python -m http.server 8765 --bind 127.0.0.1 --directory \"C:/Users/Admin/Desktop/ACCW/meeting-room-board\")"
     ]
   }
 }
