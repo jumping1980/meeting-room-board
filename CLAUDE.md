@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 現況
 
-MVP 已實作於單一 `index.html`（需求見 `spec.md`），無建置工具、測試或 lint 設定。
+MVP 已實作於 `index.html`（衝突檢查邏輯在 `app.js`）（需求見 `spec.md`），無建置工具、測試或 lint 設定。
 
 驗證方式：以本機靜態伺服器開啟（`file://` 或 `data:` 預覽下 localStorage 可能被禁用），例如：
 
@@ -18,7 +18,7 @@ python -m http.server 8765 --directory .
 
 ## 專案概要
 
-會議室預約看板：純前端（單一 `index.html`）原型，3 間會議室 × 30 分鐘一格的日程格狀圖，支援建立／編輯／取消預約與衝突檢查。無登入、無後端。
+會議室預約看板：純前端（`index.html` + `app.js` + `test.html`）原型，3 間會議室 × 30 分鐘一格的日程格狀圖，支援建立／編輯／取消預約與衝突檢查。無登入、無後端。
 
 ## 架構約束（來自 spec.md）
 
@@ -30,7 +30,7 @@ python -m http.server 8765 --directory .
 
 ## 開發規範
 
-- 本專案為單一 HTML 檔案，檔名固定為 `index.html`；禁止拆分多檔（CSS／JS 皆內嵌）、禁止引入外部框架。
+- 本專案為 `index.html` + `app.js` + `test.html` 三檔，禁止再拆分其他檔案、禁止引入外部框架；`app.js` 以一般 `<script src>` 載入，不使用 ES module（頁面直接雙擊開啟）。
 - 所有介面文字與程式註解使用繁體中文。
 - 每次修改後，用一句話說明改了什麼。
 

@@ -33,6 +33,7 @@
 
 ## 5. 技術限制
 - 純前端（HTML／CSS／JS），無後端、無資料庫。
+- 檔案限制：`index.html` + `app.js` + `test.html` 三檔，禁止再拆分其他檔案、禁止外部框架。
 - 資料存於 localStorage：僅限單一瀏覽器，換瀏覽器或清除資料即遺失。
 - 資料層需抽象化（如 `bookingStore`），UI 不直接存取 localStorage。
 - 需能在現代桌機瀏覽器運作，版面可容納手機寬度。
