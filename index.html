@@ -19,6 +19,40 @@
     --r3: #B7791F;
     --row: 40px;
     --head: 48px;
+    --paper: #fff;          /* 輸入框底色、hover 混色基底 */
+    --on-ink: #fff;         /* 主要按鈕上的文字 */
+    --hover-bg: #fff;
+    --primary-hover: #24395a;
+    --danger-hover: #fdecea;
+    --past-a: #F1F4F7;
+    --past-b: #E6EBF0;
+    --shadow: rgba(23,38,59,.35);
+    --backdrop: rgba(23,38,59,.45);
+    color-scheme: light;
+  }
+  /* 深色模式：只覆寫配色變數 */
+  :root[data-theme="dark"] {
+    --board: #172131;
+    --ink: #E6EDF5;
+    --ink-soft: #A3B3C7;
+    --rule: #2A3748;
+    --rule-strong: #4A5C73;
+    --ground: #0E1521;
+    --now: #FF6B57;
+    --danger: #FF8A80;
+    --r1: #4CC3D9;
+    --r2: #BE92DC;
+    --r3: #E8AC42;
+    --paper: #0F1825;
+    --on-ink: #0E1521;
+    --hover-bg: #223048;
+    --primary-hover: #C9D6E6;
+    --danger-hover: #3A1E22;
+    --past-a: #131C2A;
+    --past-b: #1B2636;
+    --shadow: rgba(0,0,0,.6);
+    --backdrop: rgba(0,0,0,.65);
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   body {
@@ -40,16 +74,17 @@
     padding: 7px 14px; border: 1px solid var(--rule-strong); border-radius: 4px;
     background: var(--board); cursor: pointer; min-height: 36px;
   }
-  button:hover { background: #fff; border-color: var(--ink); }
-  button.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
-  button.primary:hover { background: #24395a; }
+  button:hover { background: var(--hover-bg); border-color: var(--ink); }
+  button.primary { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+  button.primary:hover { background: var(--primary-hover); }
   button.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
-  button.danger:hover { background: #fdecea; }
+  button.danger:hover { background: var(--danger-hover); }
   input, select {
     width: 100%; padding: 7px 10px; border: 1px solid var(--rule-strong);
-    border-radius: 4px; background: #fff; min-height: 36px;
+    border-radius: 4px; background: var(--paper); min-height: 36px;
   }
   .toolbar input[type=date] { width: auto; }
+  #themeToggle { margin-left: auto; }
 
   /* 格狀圖 */
   main { max-width: 980px; margin: 0 auto; padding: 0 20px 40px; }
@@ -81,21 +116,21 @@
     content: "＋ 預約"; position: absolute; inset: 0; display: none; align-items: center;
     padding-left: 12px; color: var(--rc); font-weight: 600; font-size: 13px;
   }
-  td.free:hover { background: color-mix(in srgb, var(--rc) 9%, white); }
+  td.free:hover { background: color-mix(in srgb, var(--rc) 9%, var(--paper)); }
   td.free:hover::after { display: flex; }
 
   /* 已過去：斜紋表示不可預約 */
   td.past {
-    background: repeating-linear-gradient(135deg, #F1F4F7 0 6px, #E6EBF0 6px 7px);
+    background: repeating-linear-gradient(135deg, var(--past-a) 0 6px, var(--past-b) 6px 7px);
     cursor: not-allowed;
   }
 
   td.booked {
     cursor: pointer; vertical-align: top; padding: 6px 10px; overflow: hidden;
-    background: color-mix(in srgb, var(--rc) 14%, white);
+    background: color-mix(in srgb, var(--rc) 14%, var(--paper));
     border-left: 5px solid var(--rc); border-bottom-color: var(--board);
   }
-  td.booked:hover { background: color-mix(in srgb, var(--rc) 22%, white); }
+  td.booked:hover { background: color-mix(in srgb, var(--rc) 22%, var(--paper)); }
   td.booked.done { opacity: .62; }
   td.booked .who { display: block; font-weight: 700; font-size: 14px; line-height: 1.3; }
   td.booked .what { display: block; color: var(--ink); font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
@@ -115,7 +150,7 @@
   .list { list-style: none; margin: 0; padding: 0; background: var(--board); border: 1px solid var(--rule-strong); border-radius: 6px; overflow: hidden; }
   .list li { display: grid; grid-template-columns: 112px 96px 1fr auto; gap: 4px 12px; align-items: baseline; padding: 10px 14px; border-bottom: 1px solid var(--rule); border-left: 5px solid var(--rc); cursor: pointer; }
   .list li:last-child { border-bottom: 0; }
-  .list li:hover { background: color-mix(in srgb, var(--rc) 9%, white); }
+  .list li:hover { background: color-mix(in srgb, var(--rc) 9%, var(--paper)); }
   .list li.done { opacity: .62; }
   .list .t { font-weight: 700; font-variant-numeric: tabular-nums; }
   .list .rm { color: var(--rc); font-weight: 600; }
@@ -128,9 +163,9 @@
   /* 對話框 */
   dialog {
     border: 0; border-radius: 6px; padding: 0; width: min(440px, calc(100vw - 24px));
-    box-shadow: 0 18px 50px rgba(23,38,59,.35); background: var(--board); color: var(--ink);
+    box-shadow: 0 18px 50px var(--shadow); background: var(--board); color: var(--ink);
   }
-  dialog::backdrop { background: rgba(23,38,59,.45); }
+  dialog::backdrop { background: var(--backdrop); }
   dialog[open] { animation: pop .14s ease-out; }
   @keyframes pop { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
   .dlg-head { padding: 16px 20px 12px; border-top: 6px solid var(--rc, var(--ink)); border-bottom: 1px solid var(--rule); }
@@ -164,6 +199,7 @@
     <button id="nextDay" type="button">後一天</button>
     <input type="date" id="datePick" aria-label="選擇日期">
     <button id="exportCsv" type="button">匯出 CSV</button>
+    <button id="themeToggle" type="button" aria-pressed="false">🌙 深色模式</button>
   </div>
 </header>
 <main>
@@ -475,6 +511,16 @@ $('datePick').onchange = e => { if (e.target.value) { curDate = e.target.value; 
 render();
 // 每分鐘更新過去時段與現在時間線（對話框開啟時不重繪格狀圖，以免打斷輸入）
 setInterval(() => { if (!$('dlg').open) render(); }, 60000);
+</script>
+<script>
+// 深色模式切換：僅切換 <html> 的 data-theme，不涉及預約資料
+$('themeToggle').addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme !== 'dark';
+  if (dark) document.documentElement.dataset.theme = 'dark';
+  else delete document.documentElement.dataset.theme;
+  $('themeToggle').setAttribute('aria-pressed', String(dark));
+  $('themeToggle').textContent = dark ? '☀️ 淺色模式' : '🌙 深色模式';
+});
 </script>
 </body>
 </html>
